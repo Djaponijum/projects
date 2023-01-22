@@ -1,71 +1,86 @@
 <template>
-  <div class="container mt-5 ">
-    <v-form class="item" @submit.prevent="getCustomers">
-      <v-text-field v-model="pib" label="PIB" type="number" />
-      <v-btn type="submit" color="primary" class="btn">Submit</v-btn>
-    </v-form>
+  <div class="container">
+    <div class="form-group">
+      <label for="pib">PIB:</label>
+      <input type="text" class="form-control" v-model="pib" @keyup.enter="getCustomers()" id="pib"
+        placeholder="Enter PIB">
+    </div>
+    <button type="submit" class="btn btn-primary" @click="getCustomers()">Submit</button>
+    <table class="table table-striped" v-if="connected">
+      <thead>
+        <tr>
+          <th>PIB</th>
+          <th>Full Name</th>
+          <th>Address</th>
+          <th>Contact</th>
+          <th>Phone Number</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <tr v-for="customer in customers" :key="customer.pib" @click=showDetails(customer)>
+          <td>{{ customer.pib }}</td>
+          <td>{{ customer.full_name }}</td>
+          <td>{{ customer.address }}</td>
+          <td>{{ customer.contact }}</td>
+          <td>{{ customer.phone_number }}</td>
+
+        </tr>
+      </tbody>
+    </table>
+    
+    <Modal :cust="custData" @closeModal="dataModal = false" :showModal="dataModal"></Modal>
+  
   </div>
 
- 
-  <v-data-table :headers="headers" :items="customers" item-key="pib">
-    <template v-slot:item="{ item }">
-      <td>{{ item.full_name }}</td>
-      <td>{{ item.address }}</td>
-      <td>{{ item.contact }}</td>
-      <td>{{ item.phone_number }}</td>
-    </template>
-  </v-data-table>
+</template>
 
 
-  </template>
-  
-  <script>
+<script>
 
-  import axios from 'axios';
-  
+import axios from 'axios';
+import Modal from '../components/Modal.vue';
 
-  export default {
-    data() {
-      return {
-        pib: '',
-        headers: [
-        { text: 'Full Name', value: 'full_name' },
-        { text: 'Address', value: 'address' },
-        { text: 'Contact', value: 'contact' },
-        { text: 'Phone Number', value: 'phone_number' }
-      ],
+export default {
+
+  components: {
+    Modal,
+  },
+  data() {
+    return {
+      pib: '',
+      connected: false,
       customers: [],
-      };
-    },
+      dataModal: false,
+      custData: null
+    };
+  },
 
-    methods: {
+  methods: {
     async getCustomers() {
-      try {
-        const response = await axios.get('/customers', { params: { pib: this.pib } });
-        this.customers = response.data;
-      } catch (error) {
-        console.error(error);
-      }
-    }
+      axios
+        .get(`http://localhost:5000/customers?pib=${this.pib}`)
+        .then((resp) => {
+          console.log(resp);
+          this.customers = resp.data;
+          this.connected = true;
+        })
+
+    },
+    
+    showDetails(customer) {
+      console.log(customer?.pib);
+      this.custData = customer;
+      this.dataModal=true;
+      },
   }
+};
 
-  };
-
-  </script>
+</script>
 
 <style>
 
 .container {
-  display: flex;
-  margin-left: 750px;
-  width: 250px;
- 
+  width: 50%;
 }
-
-.item{
- 
- text-align: center;
-}
-
-
 </style>
